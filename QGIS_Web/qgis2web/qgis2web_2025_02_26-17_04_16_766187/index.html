@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <style>
+        #map {
+            width: 1170px;
+            height: 716px;
+        }
+        </style>
+        <title></title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="data/ne_10m_ocean_0.js"></script>
+        <script src="data/ne_10m_coastline_1.js"></script>
+        <script src="data/Comparaisons_2.js"></script>
+        <script src="data/Trajet_3.js"></script>
+        <script src="data/Pointsdecomparaison_4.js"></script>
+        <script src="data/Etapes_5.js"></script>
+        <script src="data/Lieuxaperusdepuislamer_6.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        function pop_ne_10m_ocean_0(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['featurecla'] !== null ? autolinker.link(String(feature.properties['featurecla']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['scalerank'] !== null ? autolinker.link(String(feature.properties['scalerank']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['min_zoom'] !== null ? autolinker.link(String(feature.properties['min_zoom']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ne_10m_ocean_0_0() {
+            return {
+                pane: 'pane_ne_10m_ocean_0',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,221,255,1.0)',
+                interactive: false,
+            }
+        }
+        map.createPane('pane_ne_10m_ocean_0');
+        map.getPane('pane_ne_10m_ocean_0').style.zIndex = 400;
+        map.getPane('pane_ne_10m_ocean_0').style['mix-blend-mode'] = 'normal';
+        var layer_ne_10m_ocean_0 = new L.geoJson(json_ne_10m_ocean_0, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_ne_10m_ocean_0',
+            layerName: 'layer_ne_10m_ocean_0',
+            pane: 'pane_ne_10m_ocean_0',
+            onEachFeature: pop_ne_10m_ocean_0,
+            style: style_ne_10m_ocean_0_0,
+        });
+        bounds_group.addLayer(layer_ne_10m_ocean_0);
+        map.addLayer(layer_ne_10m_ocean_0);
+        function pop_ne_10m_coastline_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['featurecla'] !== null ? autolinker.link(String(feature.properties['featurecla']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['scalerank'] !== null ? autolinker.link(String(feature.properties['scalerank']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['min_zoom'] !== null ? autolinker.link(String(feature.properties['min_zoom']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_ne_10m_coastline_1_0() {
+            return {
+                pane: 'pane_ne_10m_coastline_1',
+                opacity: 1,
+                color: 'rgba(164,113,88,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 1.0,
+                fillOpacity: 0,
+                interactive: false,
+            }
+        }
+        map.createPane('pane_ne_10m_coastline_1');
+        map.getPane('pane_ne_10m_coastline_1').style.zIndex = 401;
+        map.getPane('pane_ne_10m_coastline_1').style['mix-blend-mode'] = 'normal';
+        var layer_ne_10m_coastline_1 = new L.geoJson(json_ne_10m_coastline_1, {
+            attribution: '',
+            interactive: false,
+            dataVar: 'json_ne_10m_coastline_1',
+            layerName: 'layer_ne_10m_coastline_1',
+            pane: 'pane_ne_10m_coastline_1',
+            onEachFeature: pop_ne_10m_coastline_1,
+            style: style_ne_10m_coastline_1_0,
+        });
+        bounds_group.addLayer(layer_ne_10m_coastline_1);
+        map.addLayer(layer_ne_10m_coastline_1);
+        function pop_Comparaisons_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>Date</strong><br />' + (feature.properties['date'] !== null ? autolinker.link(String(feature.properties['date']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="place_compare" colspan="2"><strong>Point de comparaison</strong><br />' + (feature.properties['place_compare'] !== null ? autolinker.link(String(feature.properties['place_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Comparaison</th>\
+                        <td>' + (feature.properties['desc_compare'] !== null ? autolinker.link(String(feature.properties['desc_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Comparaisons_2_0() {
+            return {
+                pane: 'pane_Comparaisons_2',
+                opacity: 1,
+                color: 'rgba(0,158,23,1.0)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Comparaisons_2');
+        map.getPane('pane_Comparaisons_2').style.zIndex = 402;
+        map.getPane('pane_Comparaisons_2').style['mix-blend-mode'] = 'normal';
+        var layer_Comparaisons_2 = new L.geoJson(json_Comparaisons_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Comparaisons_2',
+            layerName: 'layer_Comparaisons_2',
+            pane: 'pane_Comparaisons_2',
+            onEachFeature: pop_Comparaisons_2,
+            style: style_Comparaisons_2_0,
+        });
+        bounds_group.addLayer(layer_Comparaisons_2);
+        map.addLayer(layer_Comparaisons_2);
+        function pop_Trajet_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>Date</strong><br />' + (feature.properties['date'] !== null ? autolinker.link(String(feature.properties['date']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Début du trajet</th>\
+                        <td>' + (feature.properties['place_start'] !== null ? autolinker.link(String(feature.properties['place_start']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Fin du trajet</th>\
+                        <td>' + (feature.properties['place_end'] !== null ? autolinker.link(String(feature.properties['place_end']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td class="visible-with-data" id="placename" colspan="2"><strong>Relais</strong><br />' + (feature.properties['placename'] !== null ? autolinker.link(String(feature.properties['placename']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Point de comparaison</th>\
+                        <td class="visible-with-data" id="place_compare">' + (feature.properties['place_compare'] !== null ? autolinker.link(String(feature.properties['place_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Comparaison</th>\
+                        <td class="visible-with-data" id="desc_compare">' + (feature.properties['desc_compare'] !== null ? autolinker.link(String(feature.properties['desc_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Hébergement</th>\
+                        <td class="visible-with-data" id="desc_logement">' + (feature.properties['desc_logement'] !== null ? autolinker.link(String(feature.properties['desc_logement']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage naturel</th>\
+                        <td class="visible-with-data" id="desc_paysage_nat">' + (feature.properties['desc_paysage_nat'] !== null ? autolinker.link(String(feature.properties['desc_paysage_nat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage humain</th>\
+                        <td class="visible-with-data" id="desc_paysage_hum">' + (feature.properties['desc_paysage_hum'] !== null ? autolinker.link(String(feature.properties['desc_paysage_hum']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des monuments</th>\
+                        <td class="visible-with-data" id="desc_monuments">' + (feature.properties['desc_monuments'] !== null ? autolinker.link(String(feature.properties['desc_monuments']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des personnes</th>\
+                        <td class="visible-with-data" id="desc_pers">' + (feature.properties['desc_pers'] !== null ? autolinker.link(String(feature.properties['desc_pers']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des animaux</th>\
+                        <td class="visible-with-data" id="desc_animaux">' + (feature.properties['desc_animaux'] !== null ? autolinker.link(String(feature.properties['desc_animaux']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Réflexions</th>\
+                        <td class="visible-with-data" id="reflexion">' + (feature.properties['reflexion'] !== null ? autolinker.link(String(feature.properties['reflexion']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Trajet_3_0() {
+            return {
+                pane: 'pane_Trajet_3',
+                opacity: 1,
+                color: 'rgba(219,30,42,0.9019607843137255)',
+                dashArray: '',
+                lineCap: 'round',
+                lineJoin: 'round',
+                weight: 5.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Trajet_3');
+        map.getPane('pane_Trajet_3').style.zIndex = 403;
+        map.getPane('pane_Trajet_3').style['mix-blend-mode'] = 'normal';
+        var layer_Trajet_3 = new L.geoJson(json_Trajet_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Trajet_3',
+            layerName: 'layer_Trajet_3',
+            pane: 'pane_Trajet_3',
+            onEachFeature: pop_Trajet_3,
+            style: style_Trajet_3_0,
+        });
+        bounds_group.addLayer(layer_Trajet_3);
+        map.addLayer(layer_Trajet_3);
+        function pop_Pointsdecomparaison_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>Date</strong><br />' + (feature.properties['date'] !== null ? autolinker.link(String(feature.properties['date']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2"><strong>Point de comparaison</strong><br />' + (feature.properties['place_compare'] !== null ? autolinker.link(String(feature.properties['place_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Comparaison</th>\
+                        <td class="visible-with-data" id="desc_compare">' + (feature.properties['desc_compare'] !== null ? autolinker.link(String(feature.properties['desc_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Pointsdecomparaison_4_0() {
+            return {
+                pane: 'pane_Pointsdecomparaison_4',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Pointsdecomparaison_4');
+        map.getPane('pane_Pointsdecomparaison_4').style.zIndex = 404;
+        map.getPane('pane_Pointsdecomparaison_4').style['mix-blend-mode'] = 'normal';
+        var layer_Pointsdecomparaison_4 = new L.geoJson(json_Pointsdecomparaison_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Pointsdecomparaison_4',
+            layerName: 'layer_Pointsdecomparaison_4',
+            pane: 'pane_Pointsdecomparaison_4',
+            onEachFeature: pop_Pointsdecomparaison_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Pointsdecomparaison_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Pointsdecomparaison_4);
+        map.addLayer(layer_Pointsdecomparaison_4);
+        function pop_Etapes_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2"><strong>Date</strong><br />' + (feature.properties['date'] !== null ? autolinker.link(String(feature.properties['date']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lieu</th>\
+                        <td>' + (feature.properties['placename'] !== null ? autolinker.link(String(feature.properties['placename']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Point de comparaison</th>\
+                        <td class="visible-with-data" id="place_compare">' + (feature.properties['place_compare'] !== null ? autolinker.link(String(feature.properties['place_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Comparaison</th>\
+                        <td class="visible-with-data" id="desc_compare">' + (feature.properties['desc_compare'] !== null ? autolinker.link(String(feature.properties['desc_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage naturel</th>\
+                        <td class="visible-with-data" id="desc_paysage_nat">' + (feature.properties['desc_paysage_nat'] !== null ? autolinker.link(String(feature.properties['desc_paysage_nat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage humain</th>\
+                        <td class="visible-with-data" id="desc_paysage_hum">' + (feature.properties['desc_paysage_hum'] !== null ? autolinker.link(String(feature.properties['desc_paysage_hum']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des monuments</th>\
+                        <td class="visible-with-data" id="desc_monuments">' + (feature.properties['desc_monuments'] !== null ? autolinker.link(String(feature.properties['desc_monuments']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des personnes</th>\
+                        <td class="visible-with-data" id="desc_pers">' + (feature.properties['desc_pers'] !== null ? autolinker.link(String(feature.properties['desc_pers']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Hébergement</th>\
+                        <td class="visible-with-data" id="desc_logement">' + (feature.properties['desc_logement'] !== null ? autolinker.link(String(feature.properties['desc_logement']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des animaux</th>\
+                        <td class="visible-with-data" id="desc_animaux">' + (feature.properties['desc_animaux'] !== null ? autolinker.link(String(feature.properties['desc_animaux']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Réflexions</th>\
+                        <td class="visible-with-data" id="reflexion">' + (feature.properties['reflexion'] !== null ? autolinker.link(String(feature.properties['reflexion']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Etapes_5_0() {
+            return {
+                pane: 'pane_Etapes_5',
+                radius: 6.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(183,72,75,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Etapes_5');
+        map.getPane('pane_Etapes_5').style.zIndex = 405;
+        map.getPane('pane_Etapes_5').style['mix-blend-mode'] = 'normal';
+        var layer_Etapes_5 = new L.geoJson(json_Etapes_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Etapes_5',
+            layerName: 'layer_Etapes_5',
+            pane: 'pane_Etapes_5',
+            onEachFeature: pop_Etapes_5,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Etapes_5_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Etapes_5);
+        map.addLayer(layer_Etapes_5);
+        function pop_Lieuxaperusdepuislamer_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Date</th>\
+                        <td>' + (feature.properties['date'] !== null ? autolinker.link(String(feature.properties['date']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Lieu</th>\
+                        <td>' + (feature.properties['placename'] !== null ? autolinker.link(String(feature.properties['placename']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Comparaison</th>\
+                        <td class="visible-with-data" id="desc_compare">' + (feature.properties['desc_compare'] !== null ? autolinker.link(String(feature.properties['desc_compare']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Hébergement</th>\
+                        <td class="visible-with-data" id="desc_logement">' + (feature.properties['desc_logement'] !== null ? autolinker.link(String(feature.properties['desc_logement']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage naturel</th>\
+                        <td class="visible-with-data" id="desc_paysage_nat">' + (feature.properties['desc_paysage_nat'] !== null ? autolinker.link(String(feature.properties['desc_paysage_nat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description du paysage humain</th>\
+                        <td class="visible-with-data" id="desc_paysage_hum">' + (feature.properties['desc_paysage_hum'] !== null ? autolinker.link(String(feature.properties['desc_paysage_hum']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des monuments</th>\
+                        <td class="visible-with-data" id="desc_monuments">' + (feature.properties['desc_monuments'] !== null ? autolinker.link(String(feature.properties['desc_monuments']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des personnes</th>\
+                        <td class="visible-with-data" id="desc_pers">' + (feature.properties['desc_pers'] !== null ? autolinker.link(String(feature.properties['desc_pers']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Description des animaux</th>\
+                        <td class="visible-with-data" id="desc_animaux">' + (feature.properties['desc_animaux'] !== null ? autolinker.link(String(feature.properties['desc_animaux']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Réflexions</th>\
+                        <td class="visible-with-data" id="reflexion">' + (feature.properties['reflexion'] !== null ? autolinker.link(String(feature.properties['reflexion']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Lieuxaperusdepuislamer_6_0() {
+            return {
+                pane: 'pane_Lieuxaperusdepuislamer_6',
+                radius: 6.0,
+                opacity: 1,
+                color: 'rgba(50,87,128,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(125,163,207,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Lieuxaperusdepuislamer_6');
+        map.getPane('pane_Lieuxaperusdepuislamer_6').style.zIndex = 406;
+        map.getPane('pane_Lieuxaperusdepuislamer_6').style['mix-blend-mode'] = 'normal';
+        var layer_Lieuxaperusdepuislamer_6 = new L.geoJson(json_Lieuxaperusdepuislamer_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Lieuxaperusdepuislamer_6',
+            layerName: 'layer_Lieuxaperusdepuislamer_6',
+            pane: 'pane_Lieuxaperusdepuislamer_6',
+            onEachFeature: pop_Lieuxaperusdepuislamer_6,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Lieuxaperusdepuislamer_6_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Lieuxaperusdepuislamer_6);
+        map.addLayer(layer_Lieuxaperusdepuislamer_6);
+        var overlaysTree = [
+            {label: '<img src="legend/Lieuxaperusdepuislamer_6.png" /> Lieux aperçus depuis la mer', layer: layer_Lieuxaperusdepuislamer_6},
+            {label: '<img src="legend/Etapes_5.png" /> Etapes', layer: layer_Etapes_5},
+            {label: '<img src="legend/Pointsdecomparaison_4.png" /> Points de comparaison', layer: layer_Pointsdecomparaison_4},
+            {label: '<img src="legend/Trajet_3.png" /> Trajet', layer: layer_Trajet_3},
+            {label: '<img src="legend/Comparaisons_2.png" /> Comparaisons', layer: layer_Comparaisons_2},
+            {label: '<img src="legend/ne_10m_coastline_1.png" /> ne_10m_coastline', layer: layer_ne_10m_coastline_1},
+            {label: '<img src="legend/ne_10m_ocean_0.png" /> ne_10m_ocean', layer: layer_ne_10m_ocean_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        L.control.scale({position: 'bottomleft', maxWidth: 100, metric: true, imperial: false, updateWhenIdle: false}).addTo(map);
+        setBounds();
+        var i = 0;
+        layer_Pointsdecomparaison_4.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['place_compare'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['place_compare']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Pointsdecomparaison_4'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_Etapes_5.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['placename'] !== null?String('<div style="color: #000000; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['placename']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Etapes_5'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_Lieuxaperusdepuislamer_6.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['placename'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['placename']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Lieuxaperusdepuislamer_6'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_Trajet_3,layer_Pointsdecomparaison_4,layer_Etapes_5,layer_Lieuxaperusdepuislamer_6]);
+        map.on("zoomend", function(){
+            resetLabels([layer_Trajet_3,layer_Pointsdecomparaison_4,layer_Etapes_5,layer_Lieuxaperusdepuislamer_6]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_Trajet_3,layer_Pointsdecomparaison_4,layer_Etapes_5,layer_Lieuxaperusdepuislamer_6]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_Trajet_3,layer_Pointsdecomparaison_4,layer_Etapes_5,layer_Lieuxaperusdepuislamer_6]);
+        });
+        </script>
+    </body>
+</html>
